@@ -4,14 +4,15 @@ import {
   deleteBook,
   getBookById,
   getBooks,
+  updateBook,
 } from "../controllers/Book.js";
 
 const route = express.Router();
 
 route.get("/", getBooks);
-route.get("/:code", getBookById);
+route.get("/:id", getBookById);
 route.post("/add-book", addBook);
-route.put("/add-book", updateBook);
-route.delete("/delete-book/:code", deleteBook);
+route.put("/update-book/:id", updateBook);
+route.delete("/delete-book/:id", deleteBook);
 
 export default route;

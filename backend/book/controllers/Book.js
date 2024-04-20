@@ -7,18 +7,22 @@ export const getBooks = async (req, res) => {
     let jsonRes = { message: "success", data: books };
 
     res.status(200).json(jsonRes);
-  } catch (err) {}
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
 };
 
 export const getBookById = async (req, res) => {
   try {
-    const { code } = req.params;
-    let books = await Book.findOne({ code });
+    const { id } = req.params;
+    let books = await Book.findOne({ id });
 
     let jsonRes = { message: "success", data: books };
 
     res.status(200).json(jsonRes);
-  } catch (err) {}
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
 };
 
 export const addBook = async (req, res) => {
@@ -28,7 +32,6 @@ export const addBook = async (req, res) => {
     const existingBook = await Book.findOne({ code: book.code });
 
     if (existingBook) {
-      console.log("Book with the same code already exists:", existingBook);
       jsonRes.message = "Book with the same code already exists";
       res.status(400).json(jsonRes);
     } else {
@@ -37,14 +40,16 @@ export const addBook = async (req, res) => {
       jsonRes.data = createdBook;
       res.status(202).json(jsonRes);
     }
-  } catch (err) {}
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
 };
 
 export const deleteBook = async (req, res) => {
   try {
     let jsonRes = { message: "success" };
-    const { code } = req.params;
-    let deletedBook = await Book.findOneAndDelete({ code });
+    const { id } = req.params;
+    let deletedBook = await Book.findOneAndDelete({ id });
 
     if (deletedBook) {
       jsonRes.message = "Book deleted successfully";
@@ -53,41 +58,27 @@ export const deleteBook = async (req, res) => {
       jsonRes.message = "Book not found";
       res.status(404).json(jsonRes);
     }
-  } catch (err) {}
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
 };
 
-export const updateBook = async (req, res) => {
+export const updateBook = (req, res) => {
   try {
     let jsonRes = { message: "success", data: null };
-    const { code } = req.params;
+    const { id } = req.params;
     const newBookData = req.body;
-
-    const oldBook = await Book.findOne({ code });
-
-    if (!oldBook) {
-      jsonRes.message = "Book not found";
-      return res.status(404).json(jsonRes);
-    }
-
-    const isSameBook =
-      JSON.stringify(oldBook.toObject()) === JSON.stringify(newBookData);
-
-    if (isSameBook) {
-      jsonRes.message = "No changes detected";
-      return res.status(200).json(jsonRes);
-    }
-
-    const updatedBook = await Book.findOneAndUpdate({ code }, newBookData, {
+    const updatedBook = Book.findOneAndUpdate({ id }, newBookData, {
       new: true,
     });
-
     if (updatedBook) {
-      jsonRes.message = "Book updated successfully";
       jsonRes.data = updatedBook;
       res.status(200).json(jsonRes);
     } else {
-      jsonRes.message = "Failed to update book";
-      res.status(500).json(jsonRes);
+      jsonRes.message = "Book not found";
+      res.status(404).json(jsonRes);
     }
-  } catch (err) {}
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
 };
