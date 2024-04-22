@@ -1,12 +1,17 @@
 import express from "express";
-import { addLoan, getLoans, getloanById } from "../controllers/Loan.js";
+import {
+  addLoan,
+  getLoans,
+  getloanById,
+  returnBook,
+} from "../controllers/Loan.js";
 
 const route = express.Router();
 
 route.get("/", getLoans);
 route.get("/:id", getloanById);
-route.post("/add-book", addLoan);
-// route.put("/update-book/:id", updateBook);
-// route.delete("/delete-book/:id", deleteBook);
+route.post("/add-loan", addLoan);
+route.post("/return-book", returnBook);
+// route.get("/return-all-book/:id", returnBooks);
 
 export default route;
