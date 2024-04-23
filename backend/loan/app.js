@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import mongoose from "mongoose";
 import loanRoute from "./routes/Loan.js";
+import { connect } from "amqplib";
 
 const app = express();
 

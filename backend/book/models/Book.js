@@ -1,9 +1,10 @@
 import mongoose from "mongoose";
+import { v4 } from "uuid";
 
 const bookSchema = new mongoose.Schema({
   code: {
     type: String,
-    required: true,
+    default: v4(),
     unique: true,
   },
   titre: {

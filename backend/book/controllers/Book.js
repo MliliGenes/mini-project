@@ -1,4 +1,5 @@
 import Book from "../models/Book.js";
+import { sendMessageToQueue } from "../utils/broker.js";
 
 export const getBooks = async (req, res) => {
   try {
@@ -29,17 +30,14 @@ export const addBook = async (req, res) => {
   try {
     let jsonRes = { message: "success", data: null };
     const book = req.body;
-    const existingBook = await Book.findOne({ code: book.code });
 
-    if (existingBook) {
-      jsonRes.message = "Book with the same code already exists";
-      res.status(400).json(jsonRes);
-    } else {
-      const createdBook = await Book.create(bookData);
-      console.log("New book created:", createdBook);
-      jsonRes.data = createdBook;
-      res.status(202).json(jsonRes);
-    }
+    const createdBook = await Book.create(book);
+    console.log("New book created:", createdBook);
+    jsonRes.data = createdBook;
+    res.status(202).json(jsonRes);
+
+    const messageContent = JSON.stringify(createdBook);
+    await sendMessageToQueue("books", messageContent);
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }

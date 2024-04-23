@@ -38,7 +38,7 @@ export const addLoan = async (req, res) => {
     console.log(client, book);
     console.log(dataClient, dataBook);
 
-    if (!dataClient || !dataBook) {
+    if (!dataClient.data || !dataBook.data) {
       jsonRes.message = "Client or book not found";
       res.status(404).json(jsonRes);
     }
@@ -61,6 +61,19 @@ export const returnBook = async (req, res) => {
     );
     jsonRes.data = newLoan;
     res.status(200).json(jsonRes);
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+export const returnBooks = async (req, res) => {
+  try {
+    const { client } = req.params;
+    const newLoan = await Loan.updateMany(
+      { client: client },
+      { dateRetour: Date.now() }
+    );
+    res.status(200).json(newLoan);
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
