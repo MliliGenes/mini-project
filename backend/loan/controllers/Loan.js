@@ -1,9 +1,6 @@
 import axios from "axios";
 import Loan from "../models/Loan.js";
-<<<<<<< HEAD
-=======
 import { sendMessageToQueue } from "../utils/broker.js";
->>>>>>> master
 
 export const getLoans = async (req, res) => {
   try {
