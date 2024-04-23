@@ -11,12 +11,12 @@ app.use(cors());
 dotenv.config();
 
 const port = process.env.PORT || 3003;
-const connectionString = process.env.MONGODB || "mongodb://localhost:27017/";
+// const connectionString = process.env.MONGODB || "mongodb://localhost:27017/";
 
 app.listen(port, () => console.log("server connected"));
-mongoose
-  .connect(connectionString + "Notifications")
-  .then(() => console.log("database connected"));
+// mongoose
+//   .connect(connectionString + "Notifications")
+//   .then(() => console.log("database connected"));
 
 const connection = await connect("amqp://localhost:5672");
 
