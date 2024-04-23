@@ -1,5 +1,9 @@
 import axios from "axios";
 import Loan from "../models/Loan.js";
+<<<<<<< HEAD
+=======
+import { sendMessageToQueue } from "../utils/broker.js";
+>>>>>>> master
 
 export const getLoans = async (req, res) => {
   try {
@@ -45,6 +49,12 @@ export const addLoan = async (req, res) => {
 
     const newLoan = await Loan.create(loan);
     jsonRes.data = newLoan;
+<<<<<<< HEAD
+=======
+
+    const messageContent = JSON.stringify(newLoan);
+    await sendMessageToQueue("loanTaken", messageContent);
+>>>>>>> master
     res.status(202).json(jsonRes);
   } catch (err) {
     return res.status(500).json({ message: err.message });
