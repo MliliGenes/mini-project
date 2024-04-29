@@ -1,3 +1,4 @@
+import { sendMessageToQueue } from "../../book/utils/broker.js";
 import Client from "../models/Client.js";
 
 export const getClients = async (req, res) => {
@@ -30,8 +31,11 @@ export const addClient = async (req, res) => {
     let jsonRes = { message: "success", data: null };
     const client = req.body;
     const newClient = await Client.create(client);
-    jsonRes.data = newClient;
-    res.status(202).json(jsonRes);
+
+    const messageContent = JSON.stringify(newClient);
+    await sendMessageToQueue("addedClient", messageContent);
+    // jsonRes.data = newClient;
+    res.status(202).json(jsonRes.message);
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
@@ -47,6 +51,8 @@ export const updateClient = async (req, res) => {
     });
     jsonRes.data = newClient;
     res.status(200).json(jsonRes);
+    const messageContent = JSON.stringify(newClient);
+    await sendMessageToQueue("updatedClient", messageContent);
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
@@ -59,6 +65,8 @@ export const deleteClient = async (req, res) => {
     const newClient = await Client.findOneAndDelete({ _id: id });
     jsonRes.data = newClient;
     res.status(200).json(jsonRes);
+    const messageContent = JSON.stringify(newClient);
+    await sendMessageToQueue("deletedClient", messageContent);
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
