@@ -1,18 +1,22 @@
 import express from "express";
 import {
-  addClient,
   deleteClient,
   getClientById,
   getClients,
+  loginUser,
+  registerUser,
   updateClient,
 } from "../controllers/Client.js";
+import authMiddleware from "../middlewares/Client.js";
 
 const route = express.Router();
 
+route.post("/register", registerUser);
+route.post("/login", loginUser);
 route.get("/", getClients);
-route.get("/:id", getClientById);
-route.post("/add-client", addClient);
-route.put("/update-client/:id", updateClient);
-route.delete("/delete-client/:id", deleteClient);
+route.get("/:id", authMiddleware, getClientById);
+// route.post("/add-client", addClient);
+route.put("/update-client/:id", authMiddleware, updateClient);
+route.delete("/delete-client/:id", authMiddleware, deleteClient);
 
 export default route;

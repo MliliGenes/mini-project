@@ -23,7 +23,7 @@ var transporter = nodemailer.createTransport({
   },
 });
 
-app.listen(port, () => console.log("server connected"));
+app.listen(port, () => console.log("/Notifications - server connected"));
 // mongoose
 //   .connect(connectionString + "Notifications")
 //   .then(() => console.log("database connected"));
@@ -44,6 +44,7 @@ const queueClientDeleted = "deletedClient";
 await channel.assertQueue(queueBooks, {
   durable: true,
 });
+
 channel.consume(queueBooks, (message) => {
   let bookData = JSON.parse(message.content.toString());
   let bookTitle = bookData.titre;
@@ -113,6 +114,7 @@ channel.consume(queueBooksDeleted, (message) => {
 await channel.assertQueue(queueLoans, {
   durable: true,
 });
+
 channel.consume(queueLoans, async (message) => {
   let loanData = JSON.parse(message.content.toString());
   let client = loanData.client;
