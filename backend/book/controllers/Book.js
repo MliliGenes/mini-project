@@ -37,7 +37,7 @@ export const addBook = async (req, res) => {
     res.status(202).json(jsonRes);
 
     const messageContent = JSON.stringify(createdBook);
-    await sendMessageToQueue("books", messageContent);
+    await sendMessageToQueue("bookAdded", messageContent);
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
