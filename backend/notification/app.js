@@ -76,6 +76,7 @@ channel.consume(queueBooks, (message) => {
   console.log("new book added:", bookTitle);
   channel.ack(message);
 });
+
 //book deleted
 await channel.assertQueue(queueBooksDeleted, {
   durable: true,
@@ -110,6 +111,7 @@ channel.consume(queueBooksDeleted, (message) => {
   console.log("book deleted:", bookTitle);
   channel.ack(message);
 });
+
 //loan added
 await channel.assertQueue(queueLoans, {
   durable: true,
