@@ -14,7 +14,7 @@ dotenv.config();
 const port = process.env.PORT || 3002;
 const connectionString = process.env.MONGODB || "mongodb://localhost:27017/";
 
-app.listen(port, () => console.log("server connected"));
+app.listen(port, () => console.log("server connected"+port));
 mongoose
   .connect(connectionString + "Loan")
   .then(() => console.log("database connected"));

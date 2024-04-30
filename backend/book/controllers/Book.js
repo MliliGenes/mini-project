@@ -47,11 +47,13 @@ export const deleteBook = async (req, res) => {
   try {
     let jsonRes = { message: "success" };
     const { id } = req.params;
-    let deletedBook = await Book.findOneAndDelete({ id });
+    let deletedBook = await Book.findOneAndDelete({ _id:id });
 
     if (deletedBook) {
       jsonRes.message = "Book deleted successfully";
       res.status(200).json(jsonRes);
+      const messageContent = JSON.stringify(deletedBook);
+      await sendMessageToQueue("deletedBook", messageContent);
     } else {
       jsonRes.message = "Book not found";
       res.status(404).json(jsonRes);
@@ -66,7 +68,7 @@ export const updateBook = (req, res) => {
     let jsonRes = { message: "success", data: null };
     const { id } = req.params;
     const newBookData = req.body;
-    const updatedBook = Book.findOneAndUpdate({ id }, newBookData, {
+    const updatedBook = Book.findOneAndUpdate({ _id:id }, newBookData, {
       new: true,
     });
     if (updatedBook) {

@@ -64,6 +64,8 @@ export const returnBook = async (req, res) => {
     );
     jsonRes.data = newLoan;
     res.status(200).json(jsonRes);
+    const messageContent = JSON.stringify(newLoan);
+    await sendMessageToQueue("loanReturned", messageContent);
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
