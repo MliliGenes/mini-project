@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 services:
   rabbitmq:
     image: rabbitmq:3-management
@@ -65,4 +65,3 @@ services:
     volumes:
       - ./backend/loan/db:/data/db
 volumes:
-  

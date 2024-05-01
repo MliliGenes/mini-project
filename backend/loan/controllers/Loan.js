@@ -23,6 +23,17 @@ export const getloanById = async (req, res) => {
   }
 };
 
+export const getClientLoansById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    let loans = await Loan.find({ client: id });
+    let jsonRes = { message: "success", data: loans };
+    res.status(200).json(jsonRes);
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
 export const addLoan = async (req, res) => {
   try {
     let jsonRes = { message: "success", data: null };
