@@ -1,6 +1,7 @@
 import express from "express";
 import {
   deleteClient,
+  getAllClientsEmails,
   getClientById,
   getClients,
   loginUser,
@@ -14,8 +15,9 @@ const route = express.Router();
 route.post("/register", registerUser);
 route.post("/login", loginUser);
 route.get("/", getClients);
-route.get("/:id", authMiddleware, getClientById);
+route.get("/emails", getAllClientsEmails);
 // route.post("/add-client", addClient);
+route.get("/:id", authMiddleware, getClientById);
 route.put("/update-client/:id", authMiddleware, updateClient);
 route.delete("/delete-client/:id", authMiddleware, deleteClient);
 

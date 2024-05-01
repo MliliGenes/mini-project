@@ -7,13 +7,19 @@ import {
   updateBook,
   upload,
 } from "../controllers/Book.js";
+import authMiddleware from "../../client/middlewares/Client.js";
 
 const route = express.Router();
 
-route.get("/", getBooks);
-route.get("/:id", getBookById);
-route.post("/add-book", upload.single("image"), addBook);
-route.put("/update-book/:id", upload.single("image"), updateBook);
-route.delete("/delete-book/:id", deleteBook);
+route.get("/", authMiddleware, getBooks);
+route.get("/:id", authMiddleware, getBookById);
+route.delete("/delete-book/:id", authMiddleware, deleteBook);
+route.post("/add-book", authMiddleware, upload.single("image"), addBook);
+route.put(
+  "/update-book/:id",
+  authMiddleware,
+  upload.single("image"),
+  updateBook
+);
 
 export default route;

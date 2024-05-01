@@ -4,7 +4,7 @@ import { sendMessageToQueue } from "../utils/broker.js";
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "uploads/"); // Save uploaded images to the 'uploads' directory
+    cb(null, "../../uploads/"); // Save uploaded images to the 'uploads' directory
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
@@ -14,6 +14,28 @@ const storage = multer.diskStorage({
 
 export const upload = multer({ storage: storage });
 
+export const addBook = async (req, res) => {
+  try {
+    let jsonRes = { message: "success", data: null };
+    const book = req.body;
+    console.log(req.file?.path);
+
+    if (req.file) {
+      // If a file was uploaded, add its path to the book object
+      book.image = req.file?.path;
+    }
+
+    const createdBook = await Book.create(book);
+    console.log("New book created:", createdBook);
+    jsonRes.data = createdBook;
+    res.status(202).json(jsonRes);
+    const messageContent = JSON.stringify(createdBook);
+    await sendMessageToQueue("bookAdded", messageContent);
+  } catch (err) {
+    console.log(err.message);
+    return res.status(500).json({ message: err.message });
+  }
+};
 export const getBooks = async (req, res) => {
   try {
     let books = await Book.find();
@@ -34,27 +56,6 @@ export const getBookById = async (req, res) => {
     let jsonRes = { message: "success", data: books };
 
     res.status(200).json(jsonRes);
-  } catch (err) {
-    return res.status(500).json({ message: err.message });
-  }
-};
-
-export const addBook = async (req, res) => {
-  try {
-    let jsonRes = { message: "success", data: null };
-    const book = req.body;
-
-    if (req.file) {
-      // If a file was uploaded, add its path to the book object
-      book.image = req.file.path;
-    }
-
-    const createdBook = await Book.create(book);
-    console.log("New book created:", createdBook);
-    jsonRes.data = createdBook;
-    res.status(202).json(jsonRes);
-    const messageContent = JSON.stringify(createdBook);
-    await sendMessageToQueue("bookAdded", messageContent);
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }

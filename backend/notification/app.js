@@ -28,11 +28,16 @@ app.listen(port, () => console.log("/Notifications - server connected"));
 //   .connect(connectionString + "Notifications")
 //   .then(() => console.log("database connected"));
 
+const getEmails = async () => {
+  const response = await axios.get("http://localhost:3001/api/emails");
+  return response.data?.data;
+};
+
 const connection = await connect("amqp://localhost:5672");
 
 const channel = await connection.createChannel();
 
-const queueBooks = "books";
+const queueBooks = "bookAdded";
 const queueBooksDeleted = "deletedBook";
 const queueLoans = "loanTaken";
 const queueLoansReturned = "loanReturned";
@@ -45,71 +50,91 @@ await channel.assertQueue(queueBooks, {
   durable: true,
 });
 
-channel.consume(queueBooks, (message) => {
-  let bookData = JSON.parse(message.content.toString());
-  let bookTitle = bookData.titre;
-  let bookDescription = bookData.description;
-  let bookAuthor = bookData.auteur;
+channel.consume(queueBooks, async (message) => {
+  try {
+    let bookData = JSON.parse(message.content.toString());
+    let bookTitle = bookData.titre;
+    let bookDescription = bookData.description;
+    let bookAuthor = bookData.auteur;
 
-  var mailOptions = {
-    from: "medblbbstudies@gmail.com",
-    to: "saad.elm.77@gmail.com",
-    subject: "New book added: " + bookTitle,
-    html: `
-      <html>
-        <body>
-          <h2 style="color: #007bff;">A new book has been added:</h2>
-          <p><strong>Title:</strong> ${bookTitle}</p>
-          <p><strong>Description:</strong> ${bookDescription}</p>
-          <p><strong>Author:</strong> ${bookAuthor}</p>
-        </body>
-      </html>`,
-  };
+    // Fetch emails asynchronously
+    const emails = await getEmails();
 
-  transporter.sendMail(mailOptions, function (error, info) {
-    if (error) {
-      console.log("Erreur : " + error);
-    } else {
-      console.log("Email sent: " + info.response);
-    }
-  });
-  console.log("new book added:", bookTitle);
-  channel.ack(message);
+    const mailPromises = emails.map((email) => {
+      var mailOptions = {
+        from: "medblbbstudies@gmail.com",
+        to: email,
+        subject: "New book added: " + bookTitle,
+        html: `
+          <html>
+            <body>
+              <h2 style="color: #007bff;">A new book has been added:</h2>
+              <p><strong>Title:</strong> ${bookTitle}</p>
+              <p><strong>Description:</strong> ${bookDescription}</p>
+              <p><strong>Author:</strong> ${bookAuthor}</p>
+            </body>
+          </html>`,
+      };
+
+      return transporter.sendMail(mailOptions);
+    });
+
+    // Execute all email sending promises concurrently
+    await Promise.all(mailPromises);
+
+    console.log("Emails sent to all recipients.", emails);
+    console.log("New book added:", bookTitle);
+    channel.ack(message);
+  } catch (error) {
+    console.log("Error:", error);
+    // Handle errors as needed
+  }
 });
 
 //book deleted
 await channel.assertQueue(queueBooksDeleted, {
   durable: true,
 });
-channel.consume(queueBooksDeleted, (message) => {
-  let bookData = JSON.parse(message.content.toString());
-  let bookTitle = bookData.titre;
-  let bookDescription = bookData.description;
-  let bookAuthor = bookData.auteur;
-  var mailOptions = {
-    from: "medblbbstudies@gmail.com",
-    to: "medblbbstudies@gmail.com",
-    subject: "Book deleted: " + bookTitle,
-    html: `
-      <html>
-        <body>
-          <h2 style="color: #007bff;">A book has been deleted:</h2>
-          <p><strong>Title:</strong> ${bookTitle}</p>
-          <p><strong>Description:</strong> ${bookDescription}</p>
-          <p><strong>Author:</strong> ${bookAuthor}</p>
-        </body>
-      </html>`,
-  };
 
-  transporter.sendMail(mailOptions, function (error, info) {
-    if (error) {
-      console.log("Erreur : " + error);
-    } else {
-      console.log("Email sent: " + info.response);
-    }
-  });
-  console.log("book deleted:", bookTitle);
-  channel.ack(message);
+channel.consume(queueBooksDeleted, async (message) => {
+  try {
+    let bookData = JSON.parse(message.content.toString());
+    let bookTitle = bookData.titre;
+    let bookDescription = bookData.description;
+    let bookAuthor = bookData.auteur;
+
+    // Fetch emails asynchronously
+    const emails = await getEmails();
+
+    const mailPromises = emails.map((email) => {
+      var mailOptions = {
+        from: "medblbbstudies@gmail.com",
+        to: email,
+        subject: "Book deleted: " + bookTitle,
+        html: `
+          <html>
+            <body>
+              <h2 style="color: #007bff;">A book has been deleted:</h2>
+              <p><strong>Title:</strong> ${bookTitle}</p>
+              <p><strong>Description:</strong> ${bookDescription}</p>
+              <p><strong>Author:</strong> ${bookAuthor}</p>
+            </body>
+          </html>`,
+      };
+
+      return transporter.sendMail(mailOptions);
+    });
+
+    // Execute all email sending promises concurrently
+    await Promise.all(mailPromises);
+
+    console.log("Emails sent to all recipients.");
+    console.log("Book deleted:", bookTitle);
+    channel.ack(message);
+  } catch (error) {
+    console.log("Error:", error);
+    // Handle errors as needed
+  }
 });
 
 //loan added
@@ -118,52 +143,68 @@ await channel.assertQueue(queueLoans, {
 });
 
 channel.consume(queueLoans, async (message) => {
-  let loanData = JSON.parse(message.content.toString());
-  let client = loanData.client;
-  let book = loanData.book;
-  let dateRetour = loanData.dateRetour || "Not returned yet";
-  // let dateEmprunt = loanData.dateEmprunt;
-  console.log("new loan taken:", client, book, dateRetour, dateEmprunt);
-  let clientRecord = await axios.get("http://127.0.0.1:3001/api/" + client);
-  let dataClient = clientRecord.data;
+  try {
+    let loanData = JSON.parse(message.content.toString());
+    let client = loanData.client;
+    let book = loanData.book;
+    let dateRetour = loanData.dateRetour || "Not returned yet";
 
-  let bookRecord = await axios.get("http://127.0.0.1:3000/api/" + book);
-  let dataBook = bookRecord.data;
-  let { data: clientInfo } = dataClient;
-  let { data: bookInfo } = dataBook;
-  if (!dataClient.data || !dataBook.data) {
-    console.log("Client or book not found");
-  }
-  var mailOptions = {
-    from: "medblbbstudies@gmail.com",
-    to: "saad.elm.77@gmail.com",
-    subject: "loan taken: " + bookInfo?.titre,
-    html: `
-      <html>
-        <body>
-          <h2 style="color: #007bff;">A new loan has been taken:</h2>
-          <p><strong>Title:</strong> ${bookInfo?.titre}</p>
-          <p><strong>Description:</strong> ${bookInfo?.description}</p>
-          <p><strong>Author:</strong> ${bookInfo?.auteur}</p>
-          <p><strong>Client:</strong> ${clientInfo?.nom}</p>
-          <p><strong>Date emprunt:</strong> ${dateEmprunt}</p>
-        </body>
-      </html>`,
-  };
+    // Fetch client and book data asynchronously
+    const [clientRecord, bookRecord] = await Promise.all([
+      axios.get(`http://127.0.0.1:3001/api/${client}`),
+      axios.get(`http://127.0.0.1:3000/api/${book}`),
+    ]);
 
-  transporter.sendMail(mailOptions, function (error, info) {
-    if (error) {
-      console.log("Erreur : " + error);
-    } else {
-      console.log("Email sent: " + info.response);
+    const dataClient = clientRecord.data;
+    const dataBook = bookRecord.data;
+
+    if (!dataClient.data || !dataBook.data) {
+      throw new Error("Client or book not found");
     }
-  });
-  channel.ack(message);
+
+    const { data: clientInfo } = dataClient;
+    const { data: bookInfo } = dataBook;
+
+    // Fetch emails asynchronously
+    const emails = await getEmails();
+
+    const mailPromises = emails.map((email) => {
+      var mailOptions = {
+        from: "medblbbstudies@gmail.com",
+        to: email,
+        subject: "Loan taken: " + bookInfo?.titre,
+        html: `
+          <html>
+            <body>
+              <h2 style="color: #007bff;">A new loan has been taken:</h2>
+              <p><strong>Title:</strong> ${bookInfo?.titre}</p>
+              <p><strong>Description:</strong> ${bookInfo?.description}</p>
+              <p><strong>Author:</strong> ${bookInfo?.auteur}</p>
+              <p><strong>Client:</strong> ${clientInfo?.nom}</p>
+              <p><strong>Date emprunt:</strong> ${dateEmprunt}</p>
+            </body>
+          </html>`,
+      };
+
+      return transporter.sendMail(mailOptions);
+    });
+
+    // Execute all email sending promises concurrently
+    await Promise.all(mailPromises);
+
+    console.log("Emails sent to all recipients.");
+    channel.ack(message);
+  } catch (error) {
+    console.error("Error:", error);
+    // Handle errors as needed
+  }
 });
+
 //loan returned
 await channel.assertQueue(queueLoansReturned, {
   durable: true,
 });
+
 channel.consume(queueLoansReturned, async (message) => {
   let loanData = JSON.parse(message.content.toString());
   let client = loanData.client;
@@ -207,116 +248,147 @@ channel.consume(queueLoansReturned, async (message) => {
   channel.ack(message);
 });
 //Add client
+
 await channel.assertQueue(queueClients, {
   durable: true,
 });
-channel.consume(queueClients, (message) => {
-  let clientData = JSON.parse(message.content.toString());
-  let clientName = clientData.nom;
-  let clientPrenom = clientData.prénom;
-  let clientEmail = clientData.email;
-  if (!clientName || !clientEmail) {
-    console.log("Client name or email not found");
-  }
 
-  var mailOptions = {
-    from: "medblbbstudies@gmail.com",
-    to: "medblbbstudies@gmail.com",
-    subject: "New client added: " + clientName,
-    html: `
-      <html>
-        <body>
-          <h2 style="color: #007bff;">A new client has been added:</h2>
-          <p><strong>Name:</strong> ${clientName}</p>
-          <p><strong>Prenom:</strong> ${clientPrenom}</p>
-          <p><strong>Email:</strong> ${clientEmail}</p>
-        </body>
-      </html>`,
-  };
-
-  transporter.sendMail(mailOptions, function (error, info) {
-    if (error) {
-      console.log("Erreur : " + error);
-    } else {
-      console.log("Email sent: " + info.response);
+channel.consume(queueClients, async (message) => {
+  try {
+    let clientData = JSON.parse(message.content.toString());
+    let clientName = clientData.nom;
+    let clientPrenom = clientData.prénom;
+    let clientEmail = clientData.email;
+    if (!clientName || !clientEmail) {
+      throw new Error("Client name or email not found");
     }
-  });
-  console.log("new client added:", clientName, clientEmail);
-  channel.ack(message);
+
+    // Fetch emails asynchronously
+    const emails = await getEmails();
+
+    const mailPromises = emails.map((email) => {
+      var mailOptions = {
+        from: "medblbbstudies@gmail.com",
+        to: email,
+        subject: "New client added: " + clientName,
+        html: `
+          <html>
+            <body>
+              <h2 style="color: #007bff;">A new client has been added:</h2>
+              <p><strong>Name:</strong> ${clientName}</p>
+              <p><strong>Prenom:</strong> ${clientPrenom}</p>
+              <p><strong>Email:</strong> ${clientEmail}</p>
+            </body>
+          </html>`,
+      };
+
+      return transporter.sendMail(mailOptions);
+    });
+
+    // Execute all email sending promises concurrently
+    await Promise.all(mailPromises);
+
+    console.log("Emails sent to all recipients.");
+    console.log("New client added:", clientName, clientEmail);
+    channel.ack(message);
+  } catch (error) {
+    console.error("Error:", error);
+    // Handle errors as needed
+  }
 });
+
 //Update client
 await channel.assertQueue(queueClientUpdated, {
   durable: true,
 });
-channel.consume(queueClientUpdated, (message) => {
-  let clientData = JSON.parse(message.content.toString());
-  let clientName = clientData.nom;
-  let clientPrenom = clientData.prénom;
-  let clientEmail = clientData.email;
-  if (!clientName || !clientEmail) {
-    console.log("Client name or email not found");
-  }
-
-  var mailOptions = {
-    from: "medblbbstudies@gmail.com",
-    to: "medblbbstudies@gmail.com",
-    subject: "Client updated: " + clientName,
-    html: `
-      <html>
-        <body>
-          <h2 style="color: #007bff;">A client has been updated:</h2>
-          <p><strong>Name:</strong> ${clientName}</p>
-          <p><strong>Prenom:</strong> ${clientPrenom}</p>
-          <p><strong>Email:</strong> ${clientEmail}</p>
-        </body>
-      </html>`,
-  };
-
-  transporter.sendMail(mailOptions, function (error, info) {
-    if (error) {
-      console.log("Erreur : " + error);
-    } else {
-      console.log("Email sent: " + info.response);
+channel.consume(queueClientUpdated, async (message) => {
+  try {
+    let clientData = JSON.parse(message.content.toString());
+    let clientName = clientData.nom;
+    let clientPrenom = clientData.prénom;
+    let clientEmail = clientData.email;
+    if (!clientName || !clientEmail) {
+      throw new Error("Client name or email not found");
     }
-  });
-  console.log("client updated:", clientName, clientEmail);
-  channel.ack(message);
+
+    // Fetch emails asynchronously
+    const emails = await getEmails();
+
+    const mailPromises = emails.map((email) => {
+      var mailOptions = {
+        from: "medblbbstudies@gmail.com",
+        to: email,
+        subject: "Client updated: " + clientName,
+        html: `
+          <html>
+            <body>
+              <h2 style="color: #007bff;">A client has been updated:</h2>
+              <p><strong>Name:</strong> ${clientName}</p>
+              <p><strong>Prenom:</strong> ${clientPrenom}</p>
+              <p><strong>Email:</strong> ${clientEmail}</p>
+            </body>
+          </html>`,
+      };
+
+      return transporter.sendMail(mailOptions);
+    });
+
+    // Execute all email sending promises concurrently
+    await Promise.all(mailPromises);
+
+    console.log("Emails sent to all recipients.");
+    console.log("Client updated:", clientName, clientEmail);
+    channel.ack(message);
+  } catch (error) {
+    console.error("Error:", error);
+    // Handle errors as needed
+  }
 });
 //Delete client
 await channel.assertQueue(queueClientDeleted, {
   durable: true,
 });
-channel.consume(queueClientDeleted, (message) => {
-  let clientData = JSON.parse(message.content.toString());
-  let clientName = clientData.nom;
-  let clientPrenom = clientData.prénom;
-  let clientEmail = clientData.email;
-  if (!clientName || !clientEmail) {
-    console.log("Client name or email not found");
-  }
 
-  var mailOptions = {
-    from: "medblbbstudies@gmail.com",
-    to: "medblbbstudies@gmail.com",
-    subject: "Client deleted: " + clientName,
-    html: `
-      <html>
-        <body>
-          <h2 style="color: #007bff;">A client has been deleted:</h2>
-          <p><strong>Name:</strong> ${clientName}</p>
-          <p><strong>Prenom:</strong> ${clientPrenom}</p>
-          <p><strong>Email:</strong> ${clientEmail}</p>
-        </body>
-      </html>`,
-  };
-
-  transporter.sendMail(mailOptions, function (error, info) {
-    if (error) {
-      console.log("Erreur : " + error);
-    } else {
-      console.log("Email sent: " + info.response);
+channel.consume(queueClientDeleted, async (message) => {
+  try {
+    let clientData = JSON.parse(message.content.toString());
+    let clientName = clientData.nom;
+    let clientPrenom = clientData.prénom;
+    let clientEmail = clientData.email;
+    if (!clientName || !clientEmail) {
+      throw new Error("Client name or email not found");
     }
-  });
-  console.log("client deleted:", clientName, clientEmail);
-  channel.ack(message);
+
+    // Fetch emails asynchronously
+    const emails = await getEmails();
+
+    const mailPromises = emails.map((email) => {
+      var mailOptions = {
+        from: "medblbbstudies@gmail.com",
+        to: email,
+        subject: "Client deleted: " + clientName,
+        html: `
+          <html>
+            <body>
+              <h2 style="color: #007bff;">A client has been deleted:</h2>
+              <p><strong>Name:</strong> ${clientName}</p>
+              <p><strong>Prenom:</strong> ${clientPrenom}</p>
+              <p><strong>Email:</strong> ${clientEmail}</p>
+            </body>
+          </html>`,
+      };
+
+      return transporter.sendMail(mailOptions);
+    });
+
+    // Execute all email sending promises concurrently
+    await Promise.all(mailPromises);
+
+    console.log("Emails sent to all recipients.");
+    console.log("Client deleted:", clientName, clientEmail);
+    channel.ack(message);
+  } catch (error) {
+    console.error("Error:", error);
+    // Handle errors as needed
+  }
 });

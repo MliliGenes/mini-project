@@ -130,3 +130,15 @@ export const deleteClient = async (req, res) => {
     return res.status(500).json({ message: err.message });
   }
 };
+
+export const getAllClientsEmails = async (req, res) => {
+  try {
+    let jsonRes = { message: "success", data: null };
+    const clients = await Client.find();
+    const emails = clients.map((client) => client.email);
+    jsonRes.data = emails;
+    res.status(200).json(jsonRes);
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};

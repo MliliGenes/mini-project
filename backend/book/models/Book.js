@@ -20,8 +20,8 @@ const bookSchema = new mongoose.Schema({
     required: true,
   },
   image: {
-    type: String, // Assuming you'll store the image path as a string
-    required: true, // Or change to `false` if images are optional
+    type: String,
+    required: false,
   },
 });
 
