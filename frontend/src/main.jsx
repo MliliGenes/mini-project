@@ -6,10 +6,12 @@ import "@radix-ui/themes/styles.css";
 import { configureStore } from "@reduxjs/toolkit";
 import { Provider } from "react-redux";
 import authReducer from "./features/User.js";
+import bookReducer from "./features/Books.js";
 
 const store = configureStore({
   reducer: {
     auth: authReducer,
+    books: bookReducer,
   },
 });
 

@@ -12,7 +12,7 @@ import authMiddleware from "../../client/middlewares/Client.js";
 const route = express.Router();
 
 route.get("/", authMiddleware, getBooks);
-route.get("/:id", authMiddleware, getBookById);
+route.get("/:id", getBookById);
 route.delete("/delete-book/:id", authMiddleware, deleteBook);
 route.post("/add-book", authMiddleware, upload.single("image"), addBook);
 route.put(

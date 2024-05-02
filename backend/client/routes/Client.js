@@ -17,7 +17,7 @@ route.post("/login", loginUser);
 route.get("/", getClients);
 route.get("/emails", getAllClientsEmails);
 // route.post("/add-client", addClient);
-route.get("/:id", authMiddleware, getClientById);
+route.get("/:id", getClientById);
 route.put("/update-client/:id", authMiddleware, updateClient);
 route.delete("/delete-client/:id", authMiddleware, deleteClient);
 

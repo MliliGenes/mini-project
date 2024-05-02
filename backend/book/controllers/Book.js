@@ -4,7 +4,7 @@ import { sendMessageToQueue } from "../utils/broker.js";
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "../../uploads/"); // Save uploaded images to the 'uploads' directory
+    cb(null, "../../uploads/");
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
@@ -21,7 +21,6 @@ export const addBook = async (req, res) => {
     console.log(req.file?.path);
 
     if (req.file) {
-      // If a file was uploaded, add its path to the book object
       book.image = req.file?.path;
     }
 

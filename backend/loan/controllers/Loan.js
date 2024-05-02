@@ -37,6 +37,7 @@ export const getClientLoansById = async (req, res) => {
 export const addLoan = async (req, res) => {
   try {
     let jsonRes = { message: "success", data: null };
+
     const loan = req.body;
 
     let { client, book } = loan;
@@ -47,7 +48,6 @@ export const addLoan = async (req, res) => {
     let bookRecord = await axios.get("http://127.0.0.1:3000/api/" + book);
     let dataBook = bookRecord.data;
 
-    console.log(client, book);
     console.log(dataClient, dataBook);
 
     if (!dataClient.data || !dataBook.data) {
@@ -68,11 +68,14 @@ export const addLoan = async (req, res) => {
 export const returnBook = async (req, res) => {
   try {
     let jsonRes = { message: "success", data: null };
-    const { id } = req.body;
+    const loan = req.body;
+
+    let { client, book } = loan;
     const newLoan = await Loan.findOneAndUpdate(
-      { _id: id },
+      { client: client, book: book },
       { dateRetour: Date.now() }
     );
+
     jsonRes.data = newLoan;
     res.status(200).json(jsonRes);
     const messageContent = JSON.stringify(newLoan);

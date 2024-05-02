@@ -2,8 +2,8 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
 const initialState = {
-  userId: null,
-  token: null,
+  userId: localStorage.getItem("userId") || null,
+  token: localStorage.getItem("token") || null,
   status: "idle",
   error: null,
 };
@@ -56,6 +56,10 @@ const authSlice = createSlice({
     logoutUser(state) {
       state.userId = null;
       state.token = null;
+      state.status = "idle";
+      state.error = null;
+      localStorage.removeItem("userId");
+      localStorage.removeItem("token");
     },
   },
   extraReducers: (builder) => {
@@ -79,6 +83,8 @@ const authSlice = createSlice({
         state.userId = action.payload.id;
         state.token = action.payload.token;
         state.error = "";
+        localStorage.setItem("userId", action.payload.id);
+        localStorage.setItem("token", action.payload.token);
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.status = "idle";
