@@ -5,6 +5,19 @@ services:
     ports:
       - 15672:15672
       - 5672:5672
+  nginx:
+    image: nginx
+    ports:
+      - 80:80
+    volumes:
+      - ./frontend:/usr/share/nginx/html
+      - ./nginx.config:/etc/nginx/conf.d/default.conf
+      - ./certs:/etc/nginx/certs
+    depends_on:
+      - client
+      - book
+      - loan
+      - notification
   client:
     build: ./backend/client
     ports:
@@ -64,4 +77,11 @@ services:
       - MONGODB=mongodb://localhost:27017
     volumes:
       - ./backend/loan/db:/data/db
-volumes:
+  frontend:
+    build: ./frontend
+    ports:
+      - 5173:5173
+    volumes:
+      - ./frontend:/app
+    depends_on:
+      - nginx
