@@ -11,7 +11,7 @@ export default function BooksGrid({ books }) {
         >
           <div className=" w-full h-96">
             <img
-              src={book.image.replace(/\\/g, "/")}
+              src={book.image}
               alt=""
               className="w-full h-full object-contain"
             />
