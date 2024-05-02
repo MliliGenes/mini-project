@@ -26,7 +26,7 @@ export const getloanById = async (req, res) => {
 export const getClientLoansById = async (req, res) => {
   try {
     const { id } = req.params;
-    let loans = await Loan.find({ client: id });
+    let loans = await Loan.find({ client: id, dateRetour: null });
     let jsonRes = { message: "success", data: loans };
     res.status(200).json(jsonRes);
   } catch (err) {
@@ -71,7 +71,7 @@ export const returnBook = async (req, res) => {
     const loan = req.body;
 
     let { client, book } = loan;
-    const newLoan = await Loan.findOneAndUpdate(
+    const newLoan = await Loan.updateMany(
       { client: client, book: book },
       { dateRetour: Date.now() }
     );

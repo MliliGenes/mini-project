@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import axios from "axios";
 import { Header } from "../components/header";
 import BooksGrid from "../components/booksGrid";
+import BooksList from "../components/booksList";
 
 export default function Loans() {
   const [bookIDs, setIds] = useState([]);
@@ -25,7 +26,7 @@ export default function Loans() {
     }
     getLoans().then((data) => {
       let ids = data.map((loan) => {
-        if (loan.dateRetour) {
+        if (loan.dateRetour == null) {
           return loan.book;
         }
       });
@@ -52,7 +53,7 @@ export default function Loans() {
   return (
     <div>
       <Header />
-      <BooksGrid books={books} />
+      <BooksList books={books} />
     </div>
   );
 }
